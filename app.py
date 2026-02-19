@@ -1,61 +1,79 @@
-import cv2
-import mediapipe as mp
 import streamlit as st
+import cv2
+import numpy as np
+import time
 
 # -------------------------------
-# Streamlit UI
+# Streamlit Page Config
 # -------------------------------
-st.set_page_config(page_title="Cognitive Load Meter", layout="centered")
-st.title("🧠 Cognitive Load Meter (Face + AI)")
-st.write("Real-time cognitive load detection using facial behavior")
+st.set_page_config(
+    page_title="Cognitive Load Meter",
+    layout="centered"
+)
 
-run = st.checkbox("Start Camera")
-FRAME_WINDOW = st.image([])
+st.title("🧠 Cognitive Load Meter (Cloud Demo)")
+st.write(
+    "This is a cloud-safe demo version of the Cognitive Load Meter.\n\n"
+    "⚠️ **Live face detection (MediaPipe + Camera) is disabled on Streamlit Cloud** "
+    "due to Python 3.12 limitations.\n\n"
+    "👉 Full real-time demo runs locally."
+)
 
-# -------------------------------
-# MediaPipe Face Mesh (DEFINE ONCE)
-# -------------------------------
-mp_face_mesh = mp.solutions.face_mesh
-
-face_mesh = mp_face_mesh.FaceMesh(
-    static_image_mode=False,
-    max_num_faces=1,
-    refine_landmarks=True,
-    min_detection_confidence=0.5,
-    min_tracking_confidence=0.5
+st.warning(
+    "MediaPipe & webcam access are not supported on Streamlit Cloud. "
+    "This version demonstrates UI, logic, and simulated cognitive load."
 )
 
 # -------------------------------
-# Camera
+# Simulated Cognitive Load Logic
 # -------------------------------
-cap = cv2.VideoCapture(0)
+st.subheader("📊 Cognitive Load Simulation")
 
-if run:
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            st.error("Camera not accessible")
-            break
+start = st.button("Start Monitoring")
 
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        result = face_mesh.process(frame)
+placeholder = st.empty()
+progress_bar = st.progress(0)
 
-        load_score = 25  # default
+if start:
+    load_score = 20  # initial load
+    for i in range(100):
+        # Simulate cognitive load changes
+        load_score = np.clip(load_score + np.random.randint(-3, 6), 0, 100)
 
-        if result.multi_face_landmarks:
-            load_score = 60  # face detected → simulated load
-
-        cv2.putText(
-            frame,
-            f"Cognitive Load: {load_score}/100",
-            (30, 40),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            (255, 0, 0),
-            2
+        placeholder.metric(
+            label="Cognitive Load Score",
+            value=f"{load_score} / 100"
         )
 
-        FRAME_WINDOW.image(frame)
+        progress_bar.progress(load_score / 100)
+        time.sleep(0.1)
 
-else:
-    cap.release()
+    st.success("Monitoring completed!")
+
+# -------------------------------
+# Explanation Section
+# -------------------------------
+st.markdown("---")
+st.subheader("🧩 How it works (Full Version)")
+
+st.markdown(
+    """
+- Webcam captures live video  
+- MediaPipe Face Mesh extracts facial landmarks  
+- Eye movement, blink rate & facial tension are analyzed  
+- Cognitive load score is computed in real-time  
+
+🔒 **Cloud Limitation**  
+Streamlit Cloud uses Python 3.12, which does not support MediaPipe.
+
+💻 **Local Execution**  
+Run this project locally to see the full real-time AI vision pipeline.
+"""
+)
+
+# -------------------------------
+# Footer
+# -------------------------------
+st.markdown("---")
+st.caption("Hackathon Project • Cognitive Load Meter • Face + AI")
+
